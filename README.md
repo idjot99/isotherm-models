@@ -9,6 +9,6 @@
 %
 %%
 
-Version v01 - FSP is constant
+Version v01 - FSP is a constant
 
-Version v02 - FSP is linear function of absolute temperature
+Version v02 - FSP is a linear function of the absolute temperature
