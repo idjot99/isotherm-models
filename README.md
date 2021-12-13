@@ -6,3 +6,7 @@
 % Matti Ristinmaa (a)
 % (a) Division of Solid Mechanics, Lund University, SE-221 00 Lund, Sweden ; 
 % (b) Tetra Pak, Ruben Rausingsgata, SE-221 87 Lund, Sweden
+%
+%%
+Version v01 - FSP is constant
+Version v02 - FSP is linear function of absolute temperature
