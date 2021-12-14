@@ -4,7 +4,7 @@ yielding consistent net isosteric heat of sorption
 
 Johan Tryding (a,b), Henrik Askfelt (b), Marcus Alexandersson (b), and Matti Ristinmaa (a)
 
-(a) Division of Solid Mechanics, Lund University, SE-221 00 Lund, Sweden 
+(a) Division of Solid Mechanics, Lund University, SE-223 63 Lund, Sweden 
 
-(b) Tetra Pak, Ruben Rausingsgata, SE-221 87 Lund, Sweden
+(b) Tetra Pak, Ruben Rausingsgata 2, SE-223 55 Lund, Sweden
 
