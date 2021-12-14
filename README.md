@@ -1,7 +1,7 @@
 # isotherm-models
 A full-range moisture sorption model for cellulose-based materials
-
 yielding consistent net isosteric heat of sorption
+
 Johan Tryding (a,b), Henrik Askfelt (b), Marcus Alexandersson (b), and Matti Ristinmaa (a)
 
 (a) Division of Solid Mechanics, Lund University, SE-221 00 Lund, Sweden 
