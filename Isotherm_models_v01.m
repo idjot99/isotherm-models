@@ -1,6 +1,4 @@
-%clear all;
-clf(1)
-clf(2)
+clear all;
 %%
 % 
 % A full-range moisture sorption model for cellulose-based materials
@@ -13,7 +11,7 @@ clf(2)
 %
 %%
 % Specific gas constant
-R=461.5e-3; % kJ/kg/kappa
+R=461.5e-3; % kJ/kg/K
 %
 %%
 %
@@ -29,24 +27,26 @@ isotherm{6}="LW II";
 isotherm{7}="GAB I";
 %
 markerColors={'r','r','g','g','b','b','k'};
-
+%
+plotOmega="No"; % "Yes" or "No"
+%
 %%
 % Calibrated bleached data from Table 2 
 %
 if isotherm{iso}=="Hendersson I"   
-    omegaREF=0.818; c=0.661; kappaInf=0.0841; theta0=402; n=3.64; 
+    omegaREF=0.818; c=0.591; kappaInf=0.0781; theta0=384; n=4.44; 
 elseif isotherm{iso}=="Hendersson II" 
-    omegaREF=0.818; c=0.586; kappaInf=0.0803; theta0=403; n=3.55; b=1.34;    
+    omegaREF=0.818; c=0.517; kappaInf=0.0658; theta0=405; n=3.18; b=1.39;    
 elseif isotherm{iso}=="Oswin I"  
-    omegaREF=0.818; c=0.467; kappaInf=0.0639; theta0=416; n=3.02; 
+    omegaREF=0.818; c=0.419; kappaInf=0.0523; theta0=419; n=2.67; 
 elseif isotherm{iso}=="Oswin II" 
-    omegaREF=0.818; c=0.577; kappaInf=0.0730; theta0=406; n=3.42; b=0.704;      
+    omegaREF=0.818; c=0.524; kappaInf=0.0603; theta0=407; n=3.08; b=0.681;      
 elseif isotherm{iso}=="LW I" 
-    omegaREF=0.818; c=0.389; kappaInf=0.0548; theta0=429; n=2.60;  
+    omegaREF=0.818; c=0.349; kappaInf=0.0448; theta0=434; n=2.28;  
 elseif isotherm{iso}=="LW II" 
-    omegaREF=0.818; c=0.572; kappaInf=0.0967; theta0=409; n=3.29; b=0.562;       
+    omegaREF=0.818; c=0.523; kappaInf=0.0767; theta0=410; n=2.97; b=0.534;       
 elseif isotherm{iso}=="GAB I" 
-    omegaREF=0.818; C0=61.43; qC=-149.8;         K0=1.109;    qK=-23.209;            
+    omegaREF=0.818;C0=61.434;qC=-149.82;      K0=1.1091;  qK=-23.209;          
 end     
 %    
 % Alexandersson [2]
@@ -55,6 +55,8 @@ end
 % Isotherm temperatures
     T=[25 80];       % C
     theta=273.15+T;  % K 
+% Isotherm dimensionless constant m
+    m=3;
 %%
 % Water acivity function and Net isosteric heat of sorption 
 %
@@ -65,14 +67,16 @@ omegaFSP=@(theta,theta1,thetaREF,omegaREF)(omegaREF*(1+ (thetaREF-theta)/theta1)
 %
 HisoMax =@(omega,theta,theta0,n) (1./c.*R.*theta0.*(theta0./theta).^(n)); 
 eta     =@(omega,theta,theta0,n,theta1,thetaREF,omegaREF) ...
-          (1+omega/omegaREF.*(theta/theta0).^(n+2).*(theta0/theta1)./ ...
-          (1+(thetaREF-theta)/theta1-omega/omegaREF)./(1+(thetaREF-theta)/theta1));
+          (1+m.*(omega/omegaFSP(theta,theta1,thetaREF,omegaREF)).^m./ ...
+          (1-(omega/omegaFSP(theta,theta1,thetaREF,omegaREF)).^m).* ...
+          (omegaREF./omegaFSP(theta,theta1,thetaREF,omegaREF)).*(theta/theta0).^(n+2).*(theta0/theta1));      
 %      
 if isotherm{iso}=="Hendersson I"   
     xi =@(c)(1./c.*(1-c).^(1-c).*exp(-(1-c)));
-    XI =@(omega,kappa,c,omegaFSP)((omega./xi(c)./kappa./(1-omega./omegaFSP)).^(1./c));
+    XI =@(omega,kappa,c,omegaFSP)((omega./xi(c)./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP)(1-exp(-XI(omega,kappa,c,omegaFSP)));  
-    w =@(aw,kappa,c,omegaFSP)(1./(1./omegaFSP+1./(xi(c).*kappa.*(-log(1-aw)).^c)));
+    %
+    v =@(aw,kappa,c,omegaFSP) (omegaFSP./(3.*xi(c).*kappa.*(-log(1-aw)).^c)); 
     %
     h  =@(aw)(-(1-aw)./aw.*log(1-aw));
     Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF) ... 
@@ -82,9 +86,10 @@ if isotherm{iso}=="Hendersson I"
             ); 
 elseif isotherm{iso}=="Hendersson II"           
     xi =@(c,b)(1./c.*(2*b.*(1-c)./(b+1)).^(1-b.*c).*exp(2*b.*(c-1)./(b+1)).*(1-exp(2*b.*(c-1)./(b+1))).^(b-1));
-    XI =@(omega,kappa,c,omegaFSP,b)((omega./xi(c,b)./kappa./(1-omega./omegaFSP)).^(1./c));
+    XI =@(omega,kappa,c,omegaFSP,b)((omega./xi(c,b)./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP,b)((1-exp(-(XI(omega,kappa,c,omegaFSP,b)).^(1./b))).^(b)); 
-    w =@(aw,kappa,c,omegaFSP,b)(1./(1./omegaFSP+1./(xi(c,b).*kappa.*((-log(1-aw.^(1./b))).^b).^c)));    
+    % 
+    v =@(aw,kappa,c,omegaFSP,b) (omegaFSP./(3.*xi(c,b).*kappa.*((-log(1-aw.^(1./b))).^b).^c));       
     %
     h  =@(aw,b) ((-(1-aw.^(1./b))./aw.^(1./b).*log(1-aw.^(1./b)))); 
     Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF,b) ... 
@@ -94,9 +99,10 @@ elseif isotherm{iso}=="Hendersson II"
             );     
 elseif isotherm{iso}=="Oswin I"  
     xi =@(c)(c./4.*(1./c+1).^(1+c).*(1./c-1).^(1-c));
-    XI =@(omega,kappa,c,omegaFSP)((omega./xi(c)./kappa./(1-omega./omegaFSP)).^(1./c));
+    XI =@(omega,kappa,c,omegaFSP)((omega./xi(c)./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP)(XI(omega,kappa,c,omegaFSP)./(1+XI(omega,kappa,c,omegaFSP)));     
-    w  =@(aw,kappa,c,omegaFSP)(1./(1./omegaFSP+1./(xi(c).*kappa.*(aw./(1-aw)).^c)));
+    %
+    v =@(aw,kappa,c,omegaFSP) (omegaFSP./(3.*xi(c).*kappa.*(aw./(1-aw)).^c)); 
     %
     h  =@(aw)(1-aw);  
     Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF) ... 
@@ -106,9 +112,10 @@ elseif isotherm{iso}=="Oswin I"
             );    
 elseif isotherm{iso}=="Oswin II" 
     xi =@(c,b)(1./c.*(b.*c+1).^(b.*c+1).*(b-b.*c).^(b-b.*c)./(b+1).^(b+1));
-    XI =@(omega,kappa,c,omegaFSP,b)((omega./xi(c,b)./kappa./(1-omega./omegaFSP)).^(1./c));
+    XI =@(omega,kappa,c,omegaFSP,b)((omega./xi(c,b)./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP,b)(((XI(omega,kappa,c,omegaFSP,b).^(1./b))./(1+XI(omega,kappa,c,omegaFSP,b).^(1./b))).^b);   
-    w =@(aw,kappa,c,omegaFSP,b)(1./(1./omegaFSP+1./(xi(c,b).*kappa.*((aw.^(1./b)./(1-aw.^(1./b))).^b).^c)));
+    %
+    v =@(aw,kappa,c,omegaFSP,b) (omegaFSP./(3.*xi(c,b).*kappa.*((aw.^(1./b)./(1-aw.^(1./b))).^b).^c)); 
     %
     h  =@(aw,b) ((1-aw.^(1./b))); 
     Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF,b) ... 
@@ -119,9 +126,10 @@ elseif isotherm{iso}=="Oswin II"
 elseif isotherm{iso}=="LW I"  
     p  =@(c)((sqrt(4*c+5)-(2*c+1))./(1+c)./2);
     xi =@(c)(1./c.*(p(c)).^(1-c)./(p(c)+1).*exp(-(1+c).*p(c)));
-    XI =@(omega,kappa,c,omegaFSP)((omega./xi(c)./kappa./(1-omega./omegaFSP)).^(1./c));
+    XI =@(omega,kappa,c,omegaFSP)((omega./xi(c)./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP)(1-exp(-W(XI(omega,kappa,c,omegaFSP)))); 
-    w  =@(aw,kappa,c,omegaFSP)(1./(1./omegaFSP+1./(xi(c).*kappa.*(-log(1-aw)./(1-aw)).^c)));
+    %
+    v =@(aw,kappa,c,omegaFSP) (omegaFSP./(3.*xi(c).*kappa.*(-log(1-aw)./(1-aw)).^c));     
     %
     h  =@(aw)(-(1-aw)./aw.*log(1-aw)./(1-log(1-aw))); 
     Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF) ... 
@@ -132,9 +140,10 @@ elseif isotherm{iso}=="LW I"
 elseif isotherm{iso}=="LW II" 
     p  =@(c,b)( (sqrt(4*b.*(b + c) + 1) -2*(2*c - 1)*b - 1)./ (sqrt(4*b.*(b + c) + 1) +2*(2*c + 1)*b + 1));
     xi =@(c,b)(1./(b.*c).*(p(c,b)).^(1-b.*c)./(p(c,b)+1).*exp(-(1+b.*c).*p(c,b)));
-    XI =@(omega,kappa,c,omegaFSP,b)((omega./xi(c,b)./kappa./(1-omega./omegaFSP)).^(1./c));
+    XI =@(omega,kappa,c,omegaFSP,b)((omega./xi(c,b)./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP,b)((1-exp(-W(XI(omega,kappa,c,omegaFSP,b).^(1./b)))).^b); 
-    w  =@(aw,kappa,c,omegaFSP,b)(1./(1./omegaFSP+1./(xi(c,b).*kappa.*(((-log(1-aw.^(1./b))./(1-aw.^(1./b))).^b).^c))));  
+    %
+    v =@(aw,kappa,c,omegaFSP,b) (omegaFSP./(3.*xi(c,b).*kappa.*((-log(1-aw.^(1./b))./(1-aw.^(1./b))).^b).^c)); 
     %
     h  =@(aw,b) (-(1-aw.^(1./b))./aw.^(1./b).*log(1-aw.^(1./b))./(1-log(1-aw.^(1./b)))); 
     Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF,b) ... 
@@ -147,18 +156,26 @@ elseif isotherm{iso}=="GAB I"
     C  =@(theta,C0,qC) (C0.*exp(qC/R./theta));     
     aw =@(omega,omegaFSP,C,K)((sqrt(((C-2).*K.*(omega/omegaFSP-1)+(C-1).*K.^2-1).^2+4*(C-1).*K.^2* ...
          (omega/omegaFSP).^2)+(C-1).*K.^2+(C-2).*K.*(omega/omegaFSP-1)-1)./(2*(C-1).*K.^2.*omega/omegaFSP));
-    w  =@(aw,omegaFSP,C,K)(omegaFSP.*aw.*(1-K)./(1-K.*aw).*(1-K+C.*K)./(1-K.*aw+C.*K.*aw));
     %
-    y =@(omega,omegaFSP) (omega./omegaFSP);
+    y =@(omega,omegaFSP) ((omega./omegaFSP));
     A =@(C,K,y) ((C-2).*K.*(y-1)+(C-1).*K.^2-1);
     B =@(C,K,y) (2.*(C-1).*K.^2.*y);
-    dy = @(omega,omegaFSP,theta1,omegaREF) (omega./omegaFSP./omegaFSP.*omegaREF./theta1);
+    dy = @(omega,omegaFSP,theta1,omegaREF) ((omega./omegaFSP)./omegaFSP.*omegaREF./theta1);
     rdA = @(theta,C,K,y,qC,qK,dy) (-C.*K.*qC.*(K+y-1) - K.*qK.*((C-2).*(y-1) + 2.*(C-1).*K) + (C-2).*K.*dy.*R.*theta.^2);
     rdB = @(theta,C,K,y,qC,qK,dy) (-2.*C.*qC.*K^2.*y - 4.*(C-1).*K.^2.*qK.*y + 2.*(C-1).*K.^2.*dy.*R.*theta.^2);
     %
     Hiso=@(theta,A,B,y,rdA,rdB,dy) ((A.*rdA + rdB.*y + B.*dy.*R.*theta.^2 )./((sqrt(A.^2+2*B.*y)+A).*sqrt(A.^2+2*B.*y)) + (rdA)./((sqrt(A.^2+2*B.*y)+A)) - (rdB)./(B));      
 end    
 %
+%   Invers for m=3
+    if strfind(isotherm{iso}, "II")>0
+        w =@(aw,kappa,c,omegaFSP,b) (omegaFSP.*((0.5+sqrt(0.25+v(aw,kappa,c,omegaFSP,b).^3)).^(1/3)-v(aw,kappa,c,omegaFSP,b)./(0.5+sqrt(0.25+v(aw,kappa,c,omegaFSP,b).^3)).^(1/3)));            
+    elseif isotherm{iso}=="GAB I" 
+        w=@(aw,omegaFSP,C,K)(omegaFSP.*aw.*(1-K)./(1-K.*aw).*(1-K+C.*K)./(1-K.*aw+C.*K.*aw));
+    else
+        w =@(aw,kappa,c,omegaFSP) (omegaFSP.*((0.5+sqrt(0.25+v(aw,kappa,c,omegaFSP).^3)).^(1/3)-v(aw,kappa,c,omegaFSP)./(0.5+sqrt(0.25+v(aw,kappa,c,omegaFSP).^3)).^(1/3)));        
+    end
+%        
 %%
 %
 % Water activity function
@@ -174,14 +191,22 @@ for i=1:length(theta)
     if isotherm{iso}=="GAB I"  
         plot(omega{i},aw(omega{i},omegaFSP(theta(i),theta1,thetaREF,omegaREF),C(theta(i),C0,qC),K(theta(i),K0,qK)), ...          
              markerLine{i},'color',markerColors{iso},'LineWidth',1)         
-    elseif strfind(isotherm{iso}, "II")>0 %(aw,kappa,c,omegaFSP,b)
+    elseif strfind(isotherm{iso}, "II")>0 
         plot(omega{i},aw(omega{i},kappa(theta(i),kappaInf,theta0,n),c, ...
-             omegaFSP(theta(1),theta1,thetaREF,omegaREF),b),...
-             markerLine{i},'color',markerColors{iso},'LineWidth',2);         
+             omegaFSP(theta(i),theta1,thetaREF,omegaREF),b),...
+             markerLine{i},'color',markerColors{iso},'LineWidth',2); 
+        if plotOmega=="Yes"         
+            awX=0:1.e-3:1; 
+            plot(w(awX,kappa(theta(i),kappaInf,theta0,n),c,omegaFSP(theta(i),theta1,thetaREF,omegaREF),b),awX,'k','LineWidth',1);  
+        end
     else      
         plot(omega{i},aw(omega{i},kappa(theta(i),kappaInf,theta0,n),c, ...
-             omegaFSP(theta(1),theta1,thetaREF,omegaREF)),...
-             markerLine{i},'color',markerColors{iso},'LineWidth',1); 
+             omegaFSP(theta(i),theta1,thetaREF,omegaREF)),...
+             markerLine{i},'color',markerColors{iso},'LineWidth',2); 
+        if plotOmega=="Yes"
+            awX=0:1.e-3:1; 
+            plot(w(awX,kappa(theta(i),kappaInf,theta0,n),c,omegaFSP(theta(i),theta1,thetaREF,omegaREF)),awX,'k','LineWidth',1); 
+        end
     end
 end
 %
@@ -240,9 +265,9 @@ function y = W(x)
 %
     y    = ones(size(x));
     yInf = Inf*y;
-    while any(abs(y - yInf)./abs(y) > 1.e-6)
+    while any(abs(y-yInf)./abs(y)>1.e-6)
        yInf = y;
-       y = y - (y.*exp(y)-x)./((exp(y).*(y+1) - (y+2).*(y.*exp(y)-x)./(2*y+2)));
+       y = y-(y.*exp(y)-x)./((exp(y).*(y+1)-(y+2).*(y.*exp(y)-x)./(2*y+2)));
     end
 end
 
