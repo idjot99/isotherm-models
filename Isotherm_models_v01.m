@@ -18,8 +18,8 @@ R=461.5e-3; % kJ/kg/K
 % choose isotherm type 1 to 7
 iso=6;
 %
-isotherm{1}="Hendersson I";
-isotherm{2}="Hendersson II";
+isotherm{1}="Henderson I";
+isotherm{2}="Henderson II";
 isotherm{3}="Oswin I";
 isotherm{4}="Oswin II";
 isotherm{5}="LW I";
@@ -35,10 +35,10 @@ plotAlsoOmega="Yes"; % "Yes" or "No"
 % Models calibrated to bleached fiber data from Leuk et al. Drying
 % Technology 34(5):563-573, 2016.
 %
-if isotherm{iso}=="Hendersson I"   
+if isotherm{iso}=="Henderson I"
     p = [0.5786    0.0629  377.8934    4.7100];
-    omegaREF=2.49; c=p(1); kappaInf=p(2); theta0=p(3); n=p(4); 
-elseif isotherm{iso}=="Hendersson II" 
+    omegaREF=2.49; c=p(1); kappaInf=p(2); theta0=p(3); n=p(4);
+elseif isotherm{iso}=="Henderson II"
     p = [0.4979    0.0519  375.3296    4.7748    1.4827];
     omegaREF=2.49; c=p(1); kappaInf=p(2); theta0=p(3); n=p(4); b=p(5);    
 elseif isotherm{iso}=="Oswin I"  
@@ -83,19 +83,19 @@ eta     =@(omega,theta,theta0,n,theta1,thetaREF,omegaREF) ...
           (1-(omega/omegaFSP(theta,theta1,thetaREF,omegaREF)).^m).* ...
           (omegaREF./omegaFSP(theta,theta1,thetaREF,omegaREF)).*(theta/theta0).^(n+2).*(theta0/theta1));      
 %      
-if isotherm{iso}=="Hendersson I"       
+if isotherm{iso}=="Henderson I"
     xi =@(omega,kappa,c,omegaFSP)((omega./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
-    aw =@(omega,kappa,c,omegaFSP)(1-exp(-xi(omega,kappa,c,omegaFSP)));  
+    aw =@(omega,kappa,c,omegaFSP)(1-exp(-xi(omega,kappa,c,omegaFSP)));
     %
-    v =@(aw,kappa,c,omegaFSP) (omegaFSP./(3.*kappa.*(-log(1-aw)).^c)); 
+    v =@(aw,kappa,c,omegaFSP) (omegaFSP./(3.*kappa.*(-log(1-aw)).^c));
     %
     h  =@(aw)(-(1-aw)./aw.*log(1-aw));
-    Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF) ... 
+    Hiso =@(omega,theta,c,omegaREF,kappaInf,theta0,n,theta1,thetaREF) ...
            ( HisoMax(omega,theta,theta0,n).* ...
              h(aw(omega,kappa(theta,kappaInf,theta0,n),c,omegaFSP(theta,theta1,thetaREF,omegaREF))).* ...
              eta(omega,theta,theta0,n,theta1,thetaREF,omegaREF) ...
-            ); 
-elseif isotherm{iso}=="Hendersson II"   
+            );
+elseif isotherm{iso}=="Henderson II"   
     xi =@(omega,kappa,c,omegaFSP,b)((omega./kappa./(1-(omega./omegaFSP).^m)).^(1./c));
     aw =@(omega,kappa,c,omegaFSP,b)((1-exp(-(xi(omega,kappa,c,omegaFSP,b)).^(1./b))).^(b)); 
     % 
