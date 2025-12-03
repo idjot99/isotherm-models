@@ -19,7 +19,7 @@ R = 461.5e-3  # kJ/kg/K
 # Choose isotherm type 1 to 8
 iso = 4
 
-isotherm = ["Hendersson I", "Hendersson II", "Oswin I", "Oswin II", 
+isotherm = ["Henderson I", "Henderson II", "Oswin I", "Oswin II",
             "LW I", "LW II", "GAB I", "GAB"]
 
 marker_colors = ['r', 'r', 'g', 'g', 'b', 'b', 'k', 'k']
@@ -27,12 +27,12 @@ plot_also_omega = "Yes"  # "Yes" or "No"
 
 # Models calibrated to bleached fiber data from Leuk et al. Drying Technology 34(5):563-573, 2016.
 
-if isotherm[iso - 1] == "Hendersson I":
+if isotherm[iso - 1] == "Henderson I":
     p = [0.5786, 0.0629, 377.8934, 4.7100]
     omega_ref = 2.49
     c, kappa_inf, theta0, n = p
 
-elif isotherm[iso - 1] == "Hendersson II":
+elif isotherm[iso - 1] == "Henderson II":
     p = [0.4979, 0.0519, 375.3296, 4.7748, 1.4827]
     omega_ref = 2.49
     c, kappa_inf, theta0, n, b = p
@@ -99,34 +99,34 @@ def eta(omega, theta, theta0, n, theta1, theta_ref, omega_ref):
             (omega_ref / omega_fsp_val) * (theta / theta0) ** (n + 2) * 
             (theta0 / theta1))
 
-# Define functions for "Hendersson I"
-def xi_hendersson(omega, kappa, c, omega_fsp, m):
+# Define functions for "Henderson I"
+def xi_henderson(omega, kappa, c, omega_fsp, m):
     return (omega / kappa / (1 - (omega / omega_fsp) ** m)) ** (1 / c)
 
-def aw_hendersson_i(omega, kappa, c, omega_fsp, m):
-    return 1 - np.exp(-xi_hendersson(omega, kappa, c, omega_fsp, m))
+def aw_henderson_i(omega, kappa, c, omega_fsp, m):
+    return 1 - np.exp(-xi_henderson(omega, kappa, c, omega_fsp, m))
 
-def v_hendersson_i(aw, kappa, c, omega_fsp):
+def v_henderson_i(aw, kappa, c, omega_fsp):
     return omega_fsp / (3 * kappa * (-np.log(1 - aw)) ** c)
 
-def h_hendersson_i(aw):
+def h_henderson_i(aw):
     return -(1 - aw) / aw * np.log(1 - aw)
 
-def Hiso_hendersson_i(omega, theta, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m):
-    return hiso_max(omega, theta, theta0, n) * h_hendersson_i(aw_hendersson_i(omega, kappa(theta, kappa_inf, theta0, n), c, omega_fsp(theta, theta1, theta_ref, omega_ref), m)) * eta(omega, theta, theta0, n, theta1, theta_ref, omega_ref)
+def Hiso_henderson_i(omega, theta, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m):
+    return hiso_max(omega, theta, theta0, n) * h_henderson_i(aw_henderson_i(omega, kappa(theta, kappa_inf, theta0, n), c, omega_fsp(theta, theta1, theta_ref, omega_ref), m)) * eta(omega, theta, theta0, n, theta1, theta_ref, omega_ref)
 
-# Define functions for "Hendersson II"        
-def aw_hendersson_ii(omega, kappa, c, omega_fsp, m, b):
-    return (1 - np.exp(-(xi_hendersson(omega, kappa, c, omega_fsp, m) ** (1 / b)))) ** b
+# Define functions for "Henderson II"
+def aw_henderson_ii(omega, kappa, c, omega_fsp, m, b):
+    return (1 - np.exp(-(xi_henderson(omega, kappa, c, omega_fsp, m) ** (1 / b)))) ** b
 
-def v_hendersson_ii(aw, kappa, c, omega_fsp, b):
+def v_henderson_ii(aw, kappa, c, omega_fsp, b):
     return omega_fsp / (3 * kappa * ((-np.log(1 - aw ** (1 / b))) ** b) ** c)
 
-def h_hendersson_ii(aw, b):
+def h_henderson_ii(aw, b):
     return -(1 - aw ** (1 / b)) / aw ** (1 / b) * np.log(1 - aw ** (1 / b))
 
-def Hiso_hendersson_ii(omega, theta, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m, b):
-    return hiso_max(omega, theta, theta0, n) * h_hendersson_ii(aw_hendersson_ii(omega, kappa(theta, kappa_inf, theta0, n), c, omega_fsp(theta, theta1, theta_ref, omega_ref), m, b), b) * eta(omega, theta, theta0, n, theta1, theta_ref, omega_ref)
+def Hiso_henderson_ii(omega, theta, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m, b):
+    return hiso_max(omega, theta, theta0, n) * h_henderson_ii(aw_henderson_ii(omega, kappa(theta, kappa_inf, theta0, n), c, omega_fsp(theta, theta1, theta_ref, omega_ref), m, b), b) * eta(omega, theta, theta0, n, theta1, theta_ref, omega_ref)
 
 
 # Define functions for "Oswin I"
@@ -249,20 +249,20 @@ def Hiso_gab(theta, C0, qC, K0, qK, omega, mGAB):
     term = (1 - K_val * aw_val) ** 2
     return term / (1 + (C_val - 1) * K_val ** 2 * aw_val ** 2) * qC + qK
 
-def w_hendersson_i(aw, kappa, c, omega_fsp):
-    v_val = v_hendersson_i(aw, kappa, c, omega_fsp)         
+def w_henderson_i(aw, kappa, c, omega_fsp):
+    v_val = v_henderson_i(aw, kappa, c, omega_fsp)
     return omega_fsp * ((0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3) - v_val / (0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3))
 
 def w_oswin_i(aw, kappa, c, omega_fsp):
     v_val = v_oswin_i(aw, kappa, c, omega_fsp)
     return omega_fsp * ((0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3) - v_val / (0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3))
 
-def w_lw_i(aw, kappa, c, omega_fsp):   
-    v_val = v_lw_i(aw, kappa, c, omega_fsp)           
+def w_lw_i(aw, kappa, c, omega_fsp):
+    v_val = v_lw_i(aw, kappa, c, omega_fsp)
     return omega_fsp * ((0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3) - v_val / (0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3))
 
-def w_hendersson_ii(aw, kappa, c, omega_fsp, b):
-    v_val = v_hendersson_ii(aw, kappa, c, omega_fsp, b)         
+def w_henderson_ii(aw, kappa, c, omega_fsp, b):
+    v_val = v_henderson_ii(aw, kappa, c, omega_fsp, b)
     return omega_fsp * ((0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3) - v_val / (0.5 + np.sqrt(0.25 + v_val ** 3)) ** (1/3))
 
 def w_oswin_ii(aw, kappa, c, omega_fsp, b):
@@ -309,48 +309,47 @@ for i, t in enumerate(theta):
 
     elif "II" in isotherm[iso - 1]:
         omega = np.arange(0.0, omega_fsp(t, theta1, theta_ref, omega_ref) + 0.001, 0.001)
-        if isotherm[iso - 1] == "Hendersson II":
-            plt.plot(omega, aw_hendersson_ii(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)    
+        if isotherm[iso - 1] == "Henderson II":
+            plt.plot(omega, aw_henderson_ii(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
         if isotherm[iso - 1] == "Oswin II":
             plt.plot(omega, aw_oswin_ii(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
-        if isotherm[iso - 1] == "LW II":    
+        if isotherm[iso - 1] == "LW II":
             plt.plot(omega, aw_lw_ii(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
-        
+
         if plot_also_omega == "Yes":
             aw_x = np.arange(0, 1.001, 0.001)
-            if isotherm[iso - 1] == "Hendersson II":
-            	plt.plot(w_hendersson_ii(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), b), aw_x, 'k', linewidth=1)
+            if isotherm[iso - 1] == "Henderson II":
+                plt.plot(w_henderson_ii(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), b), aw_x, 'k', linewidth=1)
             if isotherm[iso - 1] == "Oswin II":
-            	plt.plot(w_oswin_ii(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), b), aw_x, 'k', linewidth=1)
-            if isotherm[iso - 1] == "LW II":    
-	            plt.plot(w_lw_ii(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), b), aw_x, 'k', linewidth=1)
+                plt.plot(w_oswin_ii(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), b), aw_x, 'k', linewidth=1)
+            if isotherm[iso - 1] == "LW II":
+                plt.plot(w_lw_ii(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), b), aw_x, 'k', linewidth=1)
 
             
     else:
         omega = np.arange(0.0, omega_fsp(t, theta1, theta_ref, omega_ref) + 0.001, 0.001)
-        if isotherm[iso - 1] == "Hendersson I":
-            plt.plot(omega, aw_hendersson_i(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
+        if isotherm[iso - 1] == "Henderson I":
+            plt.plot(omega, aw_henderson_i(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
         if isotherm[iso - 1] == "Oswin I":
             plt.plot(omega, aw_oswin_i(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
-        if isotherm[iso - 1] == "LW I":    
+        if isotherm[iso - 1] == "LW I":
             plt.plot(omega, aw_lw_i(omega, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref), m), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
-        
+
         if plot_also_omega == "Yes":
             aw_x = np.arange(0, 1.001, 0.001)
-            if isotherm[iso - 1] == "Hendersson I":
-             	plt.plot(w_hendersson_i(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref)), aw_x, 'k', linewidth=1)
+            if isotherm[iso - 1] == "Henderson I":
+                plt.plot(w_henderson_i(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref)), aw_x, 'k', linewidth=1)
             if isotherm[iso - 1] == "Oswin I":
-            	plt.plot(w_oswin_i(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref)), aw_x, 'k', linewidth=1)
-            if isotherm[iso - 1] == "LW I":    
-	            plt.plot(w_lw_i(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref)), aw_x, 'k', linewidth=1)
-	            
+                plt.plot(w_oswin_i(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref)), aw_x, 'k', linewidth=1)
+            if isotherm[iso - 1] == "LW I":
+                plt.plot(w_lw_i(aw_x, kappa(t, kappa_inf, theta0, n), c, omega_fsp(t, theta1, theta_ref, omega_ref)), aw_x, 'k', linewidth=1)
+
 # Set plot limits and labels
 plt.axis([0, 0.3, 0, 1])
 plt.xlabel('moisture ratio, ω [-]')
 plt.ylabel('water activity, a_ω [-]')
 plt.legend(['T= 25C', 'T= 80C'], loc='lower right')
 plt.show()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 
 # Similar structure for Net isosteric heat of sorption plot
 # Ensure all necessary functions and variables are defined (Hiso, A, B, y, rdA, rdB, dy, C, K, etc.)
@@ -376,20 +375,20 @@ for i, t in enumerate(theta):
 
     elif "II" in isotherm[iso - 1]:
         omega = np.arange(0.0, omega_fsp(t, theta1, theta_ref, omega_ref) + 0.001, 0.001)
-        if isotherm[iso - 1] == "Hendersson II":
-            plt.plot(omega, Hiso_hendersson_ii(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
+        if isotherm[iso - 1] == "Henderson II":
+            plt.plot(omega, Hiso_henderson_ii(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
         if isotherm[iso - 1] == "Oswin II":
             plt.plot(omega, Hiso_oswin_ii(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
-        if isotherm[iso - 1] == "LW II":    
+        if isotherm[iso - 1] == "LW II":
             plt.plot(omega, Hiso_lw_ii(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m, b), marker_line[i], color=marker_colors[iso - 1], linewidth=2)
 
     else:
         omega = np.arange(0.0, omega_fsp(t, theta1, theta_ref, omega_ref) + 0.001, 0.001)
-        if isotherm[iso - 1] == "Hendersson I":
-            plt.plot(omega, Hiso_hendersson_i(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m), marker_line[i], color=marker_colors[iso - 1], linewidth=1)
+        if isotherm[iso - 1] == "Henderson I":
+            plt.plot(omega, Hiso_henderson_i(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m), marker_line[i], color=marker_colors[iso - 1], linewidth=1)
         if isotherm[iso - 1] == "Oswin I":
             plt.plot(omega, Hiso_oswin_i(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m), marker_line[i], color=marker_colors[iso - 1], linewidth=1)
-        if isotherm[iso - 1] == "LW I":    
+        if isotherm[iso - 1] == "LW I":
             plt.plot(omega, Hiso_lw_i(omega, t, c, omega_ref, kappa_inf, theta0, n, theta1, theta_ref, m), marker_line[i], color=marker_colors[iso - 1], linewidth=1)
                     
         
