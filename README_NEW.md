@@ -41,7 +41,7 @@ All models are calibrated to bleached fiber data from:
 ### From source
 
 ```bash
-git clone https://github.com/yourusername/isotherm-models.git
+git clone https://github.com/idjot99/isotherm-models.git
 cd isotherm-models
 pip install -r requirements.txt
 ```
